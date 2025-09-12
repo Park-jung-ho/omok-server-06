@@ -7,7 +7,7 @@
 var app = require('../app');
 var debug = require('debug')('omok06-server:server');
 var http = require('http');
-var game = require('../game');
+var matching = require('../sockets/matching');
 
 /**
  * Get port from environment and store in Express.
@@ -26,7 +26,7 @@ var server = http.createServer(app);
 /**
  * Create Socket.io server.
  */
-game(server);
+matching(server);
 
 /**
  * Listen on provided port, on all network interfaces.
