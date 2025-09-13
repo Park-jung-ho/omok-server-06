@@ -16,7 +16,7 @@ function isValidEmail(email) {
   return regex.test(email);
 }
 
-/* GET users listing. */
+/* GET users listing */
 router.get('/', function (req, res, next) {
   res.send('respond with a resource');
 });
@@ -48,10 +48,16 @@ router.post('/signup', async function (req, res, next) {
     var hash = bcrypt.hashSync(password, salt);
 
     await users.insertOne({
-      _id: email, // 이메일을 _id로 저장
-      password: hash,
+      _id: email,            // 이메일을 _id로 저장
+      password: hash,        // 보안을 위해 해시
       nickname: nickname,
-      createdAt: new Date(),
+      createdAt: new Date(), // 가입 날짜 
+
+      // 전적 관련 초기값
+      wins: 0,
+      losses: 0,
+      points: 0,
+      rank: 18
     });
 
     res.status(201).json({ result: ResponseType.SUCCESS });
@@ -82,10 +88,17 @@ router.post('/signin', async function (req, res, next) {
     if (existingUser) {
       const compareResult = await bcrypt.compare(password, existingUser.password);
       if (compareResult) {
+        // 세션 저장
         req.session.isAuthenticated = true;
         req.session.email = existingUser._id;
         req.session.nickname = existingUser.nickname;
-        res.json({ result: ResponseType.SUCCESS });
+
+        // 닉네임과 랭크까지 클라이언트에 내려줌
+        res.json({
+          result: ResponseType.SUCCESS,
+          nickname: existingUser.nickname,
+          rank: existingUser.rank
+        });
       } else {
         res.status(401).json({ result: ResponseType.INVALID_PASSWORD });
       }
