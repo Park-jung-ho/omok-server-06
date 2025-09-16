@@ -25,7 +25,7 @@ app.use(session({
   saveUninitialized: false,  // 세션이 필요할 때만 저장하도록 설정
   store: new fileStore({
     path: './sessions', // 세션 파일 저장 경로 지정
-    ttl: 24 * 60 * 60, // 세션 유효 기간 (1일)
+    ttl: 24 * 60 * 60,  // 세션 유효 기간 (1일)
     reapInterval: 60 * 60 // 세션 정리 주기 (1시간)
   }),
   cookie: {
@@ -46,6 +46,9 @@ async function connectDB() {
     });
     console.log('Database connected successfully');
     app.set('database', database.db('omok-06'));
+
+    // 연결 끝났다고 bin/www에 알려주기
+    app.emit('dbConnected');
 
     // 연결 종료 처리
     process.on('SIGINT', async () => {
@@ -85,11 +88,8 @@ app.use(function(req, res, next) {
 
 // error handler
 app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
   res.status(err.status || 500);
   res.render('error');
 });
