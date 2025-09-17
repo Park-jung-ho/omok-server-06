@@ -24,18 +24,21 @@ router.get('/', function (req, res, next) {
 // 유저 정보 조회
 router.get('/:email', async function (req, res) {
   try {
-    var email = req.params.email;
+    // 무조건 디코딩
+    var email = decodeURIComponent(req.params.email);
+    console.log("[SERVER] UserData 요청:", email);
 
     var database = req.app.get('database');
     var users = database.collection('users');
 
-    // 비밀번호는 제외하고 조회
+    // 비밀번호 제외 조회
     const user = await users.findOne(
       { _id: email },
       { projection: { password: 0 } }
     );
 
     if (!user) {
+      console.log("[SERVER] User not found:", email);
       return res.status(404).json({ message: 'User not found' });
     }
 
@@ -88,7 +91,7 @@ router.post('/signup', async function (req, res, next) {
       wins: 0,
       losses: 0,
       points: 0,
-      rank: 18
+      rank: 18,
     });
 
     res.status(201).json({ result: ResponseType.SUCCESS });
@@ -126,7 +129,7 @@ router.post('/signin', async function (req, res, next) {
         res.json({
           result: ResponseType.SUCCESS,
           nickname: existingUser.nickname,
-          rank: existingUser.rank
+          rank: existingUser.rank,
         });
       } else {
         res.status(401).json({ result: ResponseType.INVALID_PASSWORD });
