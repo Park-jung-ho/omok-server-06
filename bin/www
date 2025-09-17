@@ -3,7 +3,7 @@
 /**
  * Module dependencies.
  */
-var app = require('../app');
+const { app, connectDB } = require('../app');
 var debug = require('debug')('omok06:server');
 var http = require('http');
 
@@ -19,25 +19,33 @@ app.set('port', port);
 var server = http.createServer(app);
 
 /**
- * DB 연결 완료 후 socket.io 실행
+ * Attach server event listeners.
  */
-app.on('dbConnected', () => {
-  console.log("DB 연결 이벤트 수신. 소켓 서버 초기화를 시도합니다.");
-  try {
-    require('../sockets/matching')(server, app);
-    console.log("소켓 서버 초기화 성공.");
-  } catch (e) {
-    console.error("소켓 서버 초기화 중 치명적인 오류 발생:", e);
-    process.exit(1); // 오류 발생 시 프로세스 종료
-  }
-});
-
-/**
- * Listen on provided port, on all network interfaces.
- */
-server.listen(port);
 server.on('error', onError);
 server.on('listening', onListening);
+
+/**
+ * Initializes server components and starts listening.
+ */
+const startServer = async () => {
+  try {
+    // 1. Connect to the database
+    await connectDB();
+
+    // 2. Initialize Socket.IO
+    require('../sockets/matching')(server, app);
+    console.log("Socket server initialized.");
+
+    // 3. Start the HTTP server
+    server.listen(port);
+
+  } catch (err) {
+    console.error("Server startup failed:", err);
+    process.exit(1);
+  }
+};
+
+startServer();
 
 /**
  * Normalize a port into a number, string, or false.
