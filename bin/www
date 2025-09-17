@@ -22,8 +22,14 @@ var server = http.createServer(app);
  * DB 연결 완료 후 socket.io 실행
  */
 app.on('dbConnected', () => {
-  console.log("DB 연결 완료 → 소켓 서버 시작");
-  require('../sockets/matching')(server, app);
+  console.log("DB 연결 이벤트 수신. 소켓 서버 초기화를 시도합니다.");
+  try {
+    require('../sockets/matching')(server, app);
+    console.log("소켓 서버 초기화 성공.");
+  } catch (e) {
+    console.error("소켓 서버 초기화 중 치명적인 오류 발생:", e);
+    process.exit(1); // 오류 발생 시 프로세스 종료
+  }
 });
 
 /**
