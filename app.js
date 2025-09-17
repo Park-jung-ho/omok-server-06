@@ -35,7 +35,7 @@ app.use(session({
   }
 }));
 
-// DB 연결
+// DB 연결 함수
 async function connectDB() {
   var databaseUrl = 'mongodb://localhost:27017';
 
@@ -47,9 +47,6 @@ async function connectDB() {
     console.log('Database connected successfully');
     app.set('database', database.db('omok-06'));
 
-    // 연결 끝났다고 bin/www에 알려주기
-    app.emit('dbConnected');
-
     // 연결 종료 처리
     process.on('SIGINT', async () => {
       await database.close();
@@ -58,14 +55,9 @@ async function connectDB() {
     });
   } catch (error) {
     console.error('Database connection failed:', error);
-    process.exit(1);
+    throw error; // bin/www에서 에러를 처리할 수 있도록 다시 던짐
   }
 }
-
-connectDB().catch(err => {
-  console.error('Failed to connect to the database:', err);
-  process.exit(1);
-});
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -77,19 +69,9 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const connectDB = () => {
-  return mongoose.connect(process.env.MONGO_URI)
-    .then(() => {
-      console.log('MongoDB Connected...');
-    })
-    .catch(err => {
-      console.log(err);
-      throw err;
-    });
-};
-
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/game', gameRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
