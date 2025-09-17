@@ -21,6 +21,39 @@ router.get('/', function (req, res, next) {
   res.send('respond with a resource');
 });
 
+// 유저 정보 조회
+router.get('/:email', async function (req, res) {
+  try {
+    var email = req.params.email;
+
+    var database = req.app.get('database');
+    var users = database.collection('users');
+
+    // 비밀번호는 제외하고 조회
+    const user = await users.findOne(
+      { _id: email },
+      { projection: { password: 0 } }
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({
+      email: user._id,
+      nickname: user.nickname,
+      rank: user.rank,
+      wins: user.wins,
+      losses: user.losses,
+      points: user.points,
+      createdAt: user.createdAt
+    });
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 // 회원가입
 router.post('/signup', async function (req, res, next) {
   try {
@@ -48,12 +81,10 @@ router.post('/signup', async function (req, res, next) {
     var hash = bcrypt.hashSync(password, salt);
 
     await users.insertOne({
-      _id: email,            // 이메일을 _id로 저장
-      password: hash,        // 보안을 위해 해시
+      _id: email,
+      password: hash,
       nickname: nickname,
-      createdAt: new Date(), // 가입 날짜 
-
-      // 전적 관련 초기값
+      createdAt: new Date(),
       wins: 0,
       losses: 0,
       points: 0,
@@ -88,12 +119,10 @@ router.post('/signin', async function (req, res, next) {
     if (existingUser) {
       const compareResult = await bcrypt.compare(password, existingUser.password);
       if (compareResult) {
-        // 세션 저장
         req.session.isAuthenticated = true;
         req.session.email = existingUser._id;
         req.session.nickname = existingUser.nickname;
 
-        // 닉네임과 랭크까지 클라이언트에 내려줌
         res.json({
           result: ResponseType.SUCCESS,
           nickname: existingUser.nickname,
