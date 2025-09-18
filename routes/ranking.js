@@ -11,3 +11,5 @@ router.get('/', async function (req, res) {
 
   res.json(ranking);
 });
+
+module.exports = router;
