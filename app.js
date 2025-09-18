@@ -37,7 +37,7 @@ app.use(session({
 
 // DB 연결 함수
 async function connectDB() {
-  var databaseUrl = 'mongodb://localhost:27017';
+  var databaseUrl = 'mongodb://101.79.11.181:27017';
 
   try {
     const database = await MongoClient.connect(databaseUrl, {
