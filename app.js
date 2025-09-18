@@ -35,9 +35,9 @@ app.use(session({
   }
 }));
 
-// DB 연결
+// DB 연결 함수
 async function connectDB() {
-  var databaseUrl = 'mongodb://101.79.11.181:27017';
+  var databaseUrl = 'mongodb://localhost:27017';
 
   try {
     const database = await MongoClient.connect(databaseUrl, {
@@ -47,9 +47,6 @@ async function connectDB() {
     console.log('Database connected successfully');
     app.set('database', database.db('omok-06'));
 
-    // 연결 끝났다고 bin/www에 알려주기
-    app.emit('dbConnected');
-
     // 연결 종료 처리
     process.on('SIGINT', async () => {
       await database.close();
@@ -58,14 +55,9 @@ async function connectDB() {
     });
   } catch (error) {
     console.error('Database connection failed:', error);
-    process.exit(1);
+    throw error; // bin/www에서 에러를 처리할 수 있도록 다시 던짐
   }
 }
-
-connectDB().catch(err => {
-  console.error('Failed to connect to the database:', err);
-  process.exit(1);
-});
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -88,10 +80,13 @@ app.use(function(req, res, next) {
 
 // error handler
 app.use(function(err, req, res, next) {
+  // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
+
+  // render the error page
   res.status(err.status || 500);
   res.render('error');
 });
 
-module.exports = app;
+module.exports = { app, connectDB };
