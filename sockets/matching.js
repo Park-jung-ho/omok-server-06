@@ -97,15 +97,32 @@ module.exports = function (server, app) {
             if (hostSocket) hostSocket.join(roomId)
             socket.join(roomId)
 
+            // 흑/백 결정 로직
+            let blackPlayer, whitePlayer
+            if (host.rank === newUser.rank) {
+              // 급수가 같으면 랜덤
+              const isHostBlack = Math.random() < 0.5
+              blackPlayer = isHostBlack ? host : newUser
+              whitePlayer = isHostBlack ? newUser : host
+            } else {
+              // 급수가 다르면 높은 급수가 흑
+              blackPlayer = (host.rank > newUser.rank) ? host : newUser
+              whitePlayer = (blackPlayer === host) ? newUser : host
+            }
+
+            // 흑/백 정보 포함해서 전달
             io.to(roomId).emit('startGame', {
               roomId,
-              players: [host.email, newUser.email]
+              black: blackPlayer.email,
+              white: whitePlayer.email
             })
 
             socketRooms.set(socket.id, roomId)
             socketRooms.set(host.socketId, roomId)
 
             console.log(`Match success: ${host.email}(rank ${host.rank}) vs ${newUser.email}(rank ${newUser.rank})`)
+            console.log(`흑: ${blackPlayer.email}, 백: ${whitePlayer.email}`)
+
             waitingRooms.delete(roomId)
 
           } else {
