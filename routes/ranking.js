@@ -1,3 +1,5 @@
+var express = require('express');
+var router = express.Router();
 router.get('/', async function (req, res) {
   const database = req.app.get('database');
   const users = database.collection('users');
